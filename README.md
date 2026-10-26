@@ -535,19 +535,21 @@ API Spring Boot y PostgreSQL con migraciones Flyway.
 | 16.2 | Se integró el escaneo de código de barras por presentación en el punto de venta. El código identifica una presentación concreta, respeta su factor de unidades y precio, muestra stock antes de agregar al carrito y no descuenta existencias hasta registrar la venta. |
 | 16.3 | El POS admite lectores USB tipo teclado (HID): el campo de escaneo tiene foco recuperable, las lecturas consecutivas se encolan, una misma presentación acumula cantidad y los errores de lectura no bloquean la siguiente. |
 | 16.4 | Se preparó la demostración local y la validación con propietarios: recorrido operativo, estado verificable, limitaciones, decisiones previas al despliegue y guía de lector USB. |
+| 17.0 | Se auditó la reunión de propietarios y se documentó el plan técnico 17.1 a 17.6 sin modificar el sistema. |
+| 17.1 | El carrito permite cambiar de presentación con confirmación y valida fracciones comerciales que convierten exactamente a unidades base enteras. No hubo cambios de base de datos. |
+| 17.2 | La búsqueda de catálogo e inventario acepta palabras parciales, abreviaturas y tildes; el POS muestra disponibilidad de otras ubicaciones únicamente al ADMIN, sin ventas cruzadas. |
+| 17.3 | El catálogo conserva historial de cambios de precio por presentación y el POS aplica descuentos o incrementos porcentuales por línea con cálculo y snapshot en backend. El ajuste general y margen siguen deshabilitados por reglas comerciales pendientes. |
 
-La validación técnica más reciente del Sprint 16.3 aprobó compilación de pruebas
-backend, lint y build frontend, 57 pruebas Vitest y 16 de 16 pruebas Playwright
-contra el entorno aislado. El Sprint 16.4 solo incorporó documentación y no
-ejecutó servicios, resets ni pruebas que escriban datos. El procedimiento y la
-evidencia se mantienen en `PROGRESO.md`; el material para la reunión está en
-`docs/REUNION_PROPIETARIOS.md` y `docs/GUIA_DEMO.md`.
+Sprint 17.3 aprobó pruebas unitarias backend seleccionadas, lint, build y 66
+pruebas Vitest. La migración V4 fue creada pero no se aplicó. Las integraciones y
+Playwright de 17.1/17.3 siguen
+pendientes: Docker Desktop no expone su socket, por lo que no se puede verificar
+PostgreSQL aislado ni backend E2E en `8081`; no se iniciaron ni reiniciaron
+servicios. El procedimiento y la evidencia se mantienen en `PROGRESO.md`.
 
 ## Siguiente trabajo recomendado
 
-El siguiente sprint debe convertir las decisiones de los propietarios en
-requisitos priorizados y preparar un piloto controlado con catalogo migrado,
-lectores, impresora, conectividad y responsables de soporte definidos. También
-quedan por priorizar los requerimientos de negocio que no formen parte de los
-flujos actuales de catálogo, inventario, compras, traslados, caja, ventas,
-clientes y reportes.
+El siguiente sprint recomendado es recuperar y ejecutar las regresiones aisladas
+pendientes de 17.1/17.3. Sprint 17.4 solo debe comenzar si se aprueban las reglas
+de cotizaciones y multimoneda; los ajustes generales y margen de 17.3 necesitan
+primero sus decisiones comerciales.
