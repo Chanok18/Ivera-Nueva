@@ -539,6 +539,7 @@ API Spring Boot y PostgreSQL con migraciones Flyway.
 | 17.1 | El carrito permite cambiar de presentación con confirmación y valida fracciones comerciales que convierten exactamente a unidades base enteras. No hubo cambios de base de datos. |
 | 17.2 | La búsqueda de catálogo e inventario acepta palabras parciales, abreviaturas y tildes; el POS muestra disponibilidad de otras ubicaciones únicamente al ADMIN, sin ventas cruzadas. |
 | 17.3 | El catálogo conserva historial de cambios de precio por presentación y el POS aplica descuentos o incrementos porcentuales por línea con cálculo y snapshot en backend. El ajuste general y margen siguen deshabilitados por reglas comerciales pendientes. |
+| 17.4A | Cotizaciones en soles: borradores, emisión y anulación independientes de ventas; snapshots comerciales, ajustes por línea y catálogo con reintento. Disponible para ADMIN y VENDEDOR, sin reserva ni descuento de stock. |
 
 Sprint 17.3 aprobó pruebas unitarias backend seleccionadas, lint, build y 66
 pruebas Vitest. La migración V4 fue creada pero no se aplicó. Las integraciones y
@@ -547,9 +548,14 @@ pendientes: Docker Desktop no expone su socket, por lo que no se puede verificar
 PostgreSQL aislado ni backend E2E en `8081`; no se iniciaron ni reiniciaron
 servicios. El procedimiento y la evidencia se mantienen en `PROGRESO.md`.
 
+Sprint 17.4A aprobó `CotizacionServiceTest` (8 pruebas), lint, build y 69
+pruebas Vitest, incluidas 3 del formulario de cotizaciones. Las migraciones V4
+y V5 están creadas pero no aplicadas: PostgreSQL, integración backend y E2E de
+cotizaciones no están validados. No hay conversión a venta ni multimoneda.
+
 ## Siguiente trabajo recomendado
 
-El siguiente sprint recomendado es recuperar y ejecutar las regresiones aisladas
-pendientes de 17.1/17.3. Sprint 17.4 solo debe comenzar si se aprueban las reglas
-de cotizaciones y multimoneda; los ajustes generales y margen de 17.3 necesitan
-primero sus decisiones comerciales.
+Recuperar el entorno aislado de pruebas cuando Docker esté disponible, validar
+V4/V5 en PostgreSQL de pruebas y ejecutar la integración backend y E2E
+pendientes. Confirmar las reglas comerciales antes de implementar conversión a
+venta o multimoneda.

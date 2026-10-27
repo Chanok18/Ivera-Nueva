@@ -127,7 +127,25 @@ redondea a dos decimales HALF_UP. No se puede combinar con el descuento monetari
 existente. El backend conserva precio, porcentaje, descuento resultante y subtotal
 en el detalle de la venta.
 
-### Sprint 17.4: Cotizaciones y multimoneda, si se aprueban
+### Sprint 17.4: Cotizaciones y funcionalidades posteriores
+
+#### Sprint 17.4A: Cotizaciones en soles
+
+**Estado al 26 de octubre de 2026:** implementado y validado con pruebas
+unitarias/backend y frontend. Se crearon `V4` y `V5`, pero no se aplicaron;
+PostgreSQL, integración y Playwright siguen pendientes.
+
+La cotización es independiente de venta: ADMIN y VENDEDOR crean, consultan y
+editan borradores, y el backend controla `BORRADOR`, `EMITIDA` y `ANULADA`.
+No reserva ni descuenta stock. Sus detalles congelan precio, factor, cantidad
+base y ajustes; editar la misma presentación conserva snapshots y una nueva usa
+catálogo vigente. La UI muestra error y reintento de catálogo sin perder cambios
+locales ni repetir consultas de inicialización.
+
+**Pendiente:** conversión trazable a venta, vigencia/aprobaciones comerciales,
+validación PostgreSQL de V4/V5, integración backend, E2E y multimoneda.
+
+#### Sprint 17.4B: Conversion a venta y multimoneda, sujeto a aprobacion
 
 **Dependencia:** Sprint 17.3 y respuestas sobre vigencia, reserva, moneda, tasa,
 caja y reportes.

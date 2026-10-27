@@ -356,3 +356,44 @@ Ejecutar las regresiones aisladas pendientes de Sprints 17.1 a 17.3 cuando
 Docker este disponible. Antes de habilitar un ajuste general o margen, obtener
 las decisiones comerciales documentadas. Luego continuar con Sprint 17.4 solo
 si se aprueban cotizaciones y multimoneda.
+
+## Sprint 17.4A: Cotizaciones en soles
+
+Estado: implementado y validado a nivel de pruebas unitarias/frontend. La
+integracion PostgreSQL y E2E permanecen pendientes.
+
+### Entregado
+
+- Modulo de cotizaciones independiente de ventas, sin reserva ni descuento de
+  stock, disponible solo para ADMIN y VENDEDOR.
+- Creacion, consulta y edicion de borradores; estados `BORRADOR`, `EMITIDA` y
+  `ANULADA`, con emision y anulacion validadas por el backend.
+- Lineas con cliente, producto, presentacion comercial, cantidades decimales
+  validas para su unidad base, descuento monetario, ajuste porcentual, subtotal,
+  IGV y total.
+- El detalle conserva snapshots de precio, factor, cantidad base y ajustes.
+  Editar la misma presentacion conserva esos snapshots; agregar otra toma el
+  precio y factor vigentes del catalogo.
+- La interfaz muestra fallos de catalogo, permite reintentar y conserva cambios
+  locales. Se elimino una consulta redundante causada por el estado usado para
+  inicializar las lineas.
+
+### Validacion
+
+| Comando | Resultado |
+|---|---|
+| `./mvnw.cmd -Dtest=CotizacionServiceTest test` | BUILD SUCCESS; 8 pruebas aprobadas. |
+| `npm test` | 11 archivos y 69 pruebas aprobadas. |
+| `npm run lint` | Correcto. |
+| `npm run build` | Correcto. |
+| Pruebas de `FormularioCotizacion` | 3 aprobadas: error, reintento y conservacion de snapshots/cambios locales. |
+
+### Pendientes
+
+- `V4__historial_precios_y_ajustes_porcentuales.sql` y
+  `V5__cotizaciones.sql` fueron creadas, pero no aplicadas.
+- No hubo validacion real de migraciones en PostgreSQL, pruebas de integracion
+  backend con base de datos ni Playwright E2E de cotizaciones.
+- No existe conversion de cotizacion a venta, reserva ni descuento de stock.
+- Multimoneda y la validacion final de reglas comerciales con propietarios siguen
+  pendientes.
