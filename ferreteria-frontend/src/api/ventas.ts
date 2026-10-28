@@ -16,6 +16,7 @@ import type {
   Paginacion,
   VentaRequest,
   VentaResponse,
+  VentaDesdeCotizacionRequest,
   CotizacionRequest,
   CotizacionResponse,
   EstadoCotizacion,
@@ -83,6 +84,8 @@ export const cajasApi = {
 
 export const ventasApi = {
   registrar: (datos: VentaRequest) => http.post<VentaResponse>('/ventas', datos).then((r) => r.data),
+  registrarDesdeCotizacion: (cotizacionId: number, datos: VentaDesdeCotizacionRequest) =>
+    http.post<VentaResponse>(`/ventas/desde-cotizacion/${cotizacionId}`, datos).then((r) => r.data),
   obtener: (id: number) => http.get<VentaResponse>(`/ventas/${id}`).then((r) => r.data),
   listar: (filtro: FiltroVentas) =>
     http.get<PaginaResponse<VentaResponse>>('/ventas', { params: filtro }).then((r) => r.data),

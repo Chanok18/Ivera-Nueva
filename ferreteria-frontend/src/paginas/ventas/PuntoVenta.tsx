@@ -1,12 +1,12 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { History, Minus, Plus, ScanBarcode, ShoppingCart, Trash2, Wallet } from 'lucide-react'
-import { useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { productosApi } from '@/api/catalogo'
 import { aApiError } from '@/api/errores'
 import { inventarioApi } from '@/api/inventario'
 import type { ClienteResponse, CondicionVenta, PresentacionResponse, ProductoResponse, VentaResponse } from '@/api/tipos'
-import { ventasApi } from '@/api/ventas'
+import { clientesApi, cotizacionesApi, ventasApi } from '@/api/ventas'
 import { EditorPagos } from '@/componentes/formularios/EditorPagos'
 import { SelectorCliente } from '@/componentes/formularios/SelectorCliente'
 import { Boton } from '@/componentes/ui/Boton'
@@ -46,6 +46,9 @@ const PAGO_INICIAL: PagoFormulario = { metodoPago: 'EFECTIVO', monto: '', numero
  */
 export default function PuntoVenta() {
   const navegar = useNavigate()
+  const [parametros] = useSearchParams()
+  const cotizacionId = Number(parametros.get('cotizacionId'))
+  const desdeCotizacion = Number.isInteger(cotizacionId) && cotizacionId > 0
   const queryClient = useQueryClient()
   const caja = useCajaActual()
   const usuario = useUsuario()
@@ -67,6 +70,16 @@ export default function PuntoVenta() {
   const colaEscaneos = useRef<ReturnType<typeof crearColaEscaneos> | null>(null)
   const busqueda = useRetraso(texto.trim(), 250)
   const tiendaId = caja.data?.ubicacionId
+  const cotizacion = useQuery({ queryKey: ['cotizaciones', 'detalle', cotizacionId], queryFn: () => cotizacionesApi.obtener(cotizacionId), enabled: desdeCotizacion })
+  const clienteCotizacion = useQuery({ queryKey: ['clientes', cotizacion.data?.clienteId], queryFn: () => clientesApi.obtener(cotizacion.data!.clienteId), enabled: desdeCotizacion && cotizacion.data !== undefined })
+
+  useEffect(() => {
+    if (!cotizacion.data || !clienteCotizacion.data) return
+    startTransition(() => {
+      setCliente(clienteCotizacion.data)
+      setCarrito(cotizacion.data.detalles.map((d) => ({ productoId: d.productoId, productoNombre: d.descripcion.split(' - ')[0] ?? d.descripcion, unidadBase: d.unidadBase, presentacionId: d.presentacionId, presentacionNombre: d.descripcion.split(' - ').slice(1).join(' - '), factor: d.factor, precio: d.precioUnitario, cantidad: String(d.cantidad), descuento: d.descuento ? String(d.descuento) : '', descuentoPorcentaje: d.ajustePorcentaje && d.ajustePorcentaje < 0 ? String(-d.ajustePorcentaje) : '', incrementoPorcentaje: d.ajustePorcentaje && d.ajustePorcentaje > 0 ? String(d.ajustePorcentaje) : '' })))
+    })
+  }, [cotizacion.data, clienteCotizacion.data])
 
   const productos = useQuery({
     queryKey: ['productos', 'pos', busqueda],
@@ -100,6 +113,7 @@ export default function PuntoVenta() {
   const restante = condicion === 'CONTADO' ? cobro.faltaCentimos : Math.max(0, totales.totalCentimos - cobro.pagadoCentimos)
 
   const agregar = (producto: ProductoResponse, presentacionId: number) => {
+    if (desdeCotizacion) return
     const p = producto.presentaciones.find((x) => x.id === presentacionId)
     if (!p) return
     setProductosEnCarrito((actual) => ({ ...actual, [producto.id]: producto }))
@@ -148,7 +162,13 @@ export default function PuntoVenta() {
 
   const registrar = useMutation({
     mutationFn: () =>
-      ventasApi.registrar({
+      desdeCotizacion
+        ? ventasApi.registrarDesdeCotizacion(cotizacionId, {
+            condicion,
+            fechaVencimiento: condicion === 'CREDITO' && vencimiento ? vencimiento : null,
+            pagos: aPagosRequest(pagos.filter((p) => condicion === 'CONTADO' || p.monto.trim() !== ''), metodos.data ?? []),
+          })
+        : ventasApi.registrar({
         condicion,
         clienteId: cliente?.id ?? null,
         fechaVencimiento: condicion === 'CREDITO' && vencimiento ? vencimiento : null,
@@ -157,7 +177,7 @@ export default function PuntoVenta() {
           pagos.filter((p) => condicion === 'CONTADO' || p.monto.trim() !== ''),
           metodos.data ?? [],
         ),
-      }),
+          }),
     onSuccess: (venta) => {
       setVendida(venta)
       void queryClient.invalidateQueries({ queryKey: ['inventario'] })
@@ -179,6 +199,10 @@ export default function PuntoVenta() {
   }
 
   const nuevaVenta = () => {
+    if (desdeCotizacion) {
+      navegar('/ventas')
+      return
+    }
     setVendida(null)
     setCarrito([])
     setProductosEnCarrito({})
@@ -196,13 +220,15 @@ export default function PuntoVenta() {
     <div>
       <EncabezadoPagina
         titulo="Punto de venta"
-        subtitulo={caja.data ? `Vendiendo en ${caja.data.ubicacionNombre} · Caja N.° ${caja.data.id}` : 'Registra ventas al contado o a crédito'}
+        subtitulo={desdeCotizacion && cotizacion.data ? `Cotización ${cotizacion.data.codigo}: snapshots acordados bloqueados` : caja.data ? `Vendiendo en ${caja.data.ubicacionNombre} · Caja N.° ${caja.data.id}` : 'Registra ventas al contado o a crédito'}
         acciones={
           <Boton variante="secundario" icono={<History className="size-4" />} onClick={() => navegar('/ventas/historial')}>
             Historial de ventas
           </Boton>
         }
       />
+      {cotizacion.isError && <MensajeError error={cotizacion.error} className="mb-4" />}
+      {desdeCotizacion && cotizacion.data && <div className="mb-4 rounded-xl border border-marca/30 bg-marca-claro px-4 py-3 text-sm">Venta desde cotización {cotizacion.data.codigo}. Cantidades, presentaciones, precios y ajustes se confirman desde el servidor.</div>}
 
       {caja.data === null && (
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-alerta/30 bg-alerta-claro px-5 py-4" role="alert">
@@ -305,7 +331,7 @@ export default function PuntoVenta() {
 
         {/* Carrito y cobro: en laptop queda fijo a la derecha con su propio desplazamiento */}
         <div className="flex flex-col gap-5 xl:sticky xl:top-[5.5rem] xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto xl:pr-1">
-          <Tarjeta>
+          <Tarjeta className={desdeCotizacion ? 'pointer-events-none opacity-85' : undefined}>
             <TituloTarjeta
               titulo={`Carrito (${carrito.length})`}
               icono={<ShoppingCart className="size-4 text-marca" />}

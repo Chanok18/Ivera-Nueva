@@ -468,6 +468,11 @@ export interface VentaDetalleRequest {
   descuento: number | null
   ajustePorcentaje: number | null
 }
+export interface VentaDesdeCotizacionRequest {
+  condicion: CondicionVenta
+  fechaVencimiento: string | null
+  pagos: PagoRequest[]
+}
 
 export type EstadoCotizacion = 'BORRADOR' | 'EMITIDA' | 'ANULADA'
 export interface CotizacionDetalleRequest { presentacionId: number; cantidad: number; descuento: number | null; ajustePorcentaje: number | null }

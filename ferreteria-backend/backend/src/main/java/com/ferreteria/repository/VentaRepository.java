@@ -23,6 +23,10 @@ public interface VentaRepository extends JpaRepository<Venta, Long>, JpaSpecific
 
     long countByCajaSesionIdAndEstado(Long cajaId, EstadoVenta estado);
 
+    boolean existsByCotizacionId(Long cotizacionId);
+
+    long countByCotizacionId(Long cotizacionId);
+
     @Query("""
             select coalesce(sum(v.total), 0) from Venta v
             where v.cajaSesion.id = :cajaId and v.estado = com.ferreteria.entity.enums.EstadoVenta.EMITIDA
