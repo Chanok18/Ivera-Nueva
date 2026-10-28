@@ -1,0 +1,20 @@
+# Perfil de pruebas: usa exclusivamente PostgreSQL aislado del Sprint 16.1.
+# Si TEST_DB_* no esta definido, intenta el puerto 5545; nunca el PostgreSQL demo (5434).
+spring:
+  config:
+    import: optional:file:.env.test[.properties]
+  datasource:
+    url: jdbc:postgresql://${TEST_DB_HOST:127.0.0.1}:${TEST_DB_PORT:5545}/${TEST_DB_NAME:ivera_sprint16_1_test}
+    username: ${TEST_DB_USER}
+    password: ${TEST_DB_PASSWORD}
+
+app:
+  pruebas:
+    base-esperada: ${TEST_DB_NAME:ivera_sprint16_1_test}
+  jwt:
+    secreto: ${TEST_JWT_SECRET}
+  admin:
+    username: admin
+    password: Admin-Pruebas-123
+  imagenes:
+    directorio: target/imagenes-pruebas
