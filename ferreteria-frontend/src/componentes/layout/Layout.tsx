@@ -1,4 +1,4 @@
-import { CircleHelp, Menu } from 'lucide-react'
+import { CircleHelp, Menu, Moon, Sun } from 'lucide-react'
 import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { cn } from '@/componentes/ui/cn'
@@ -8,6 +8,7 @@ import { BusquedaGlobal } from './BusquedaGlobal'
 import { CampanaAlertas } from './CampanaAlertas'
 import { IndicadorConexion } from './IndicadorConexion'
 import { SelectorUbicacion } from './SelectorUbicacion'
+import { usePreferenciasVisuales } from '@/contexto/usePreferenciasVisuales'
 
 /**
  * Estructura de todas las pantallas: barra lateral fija en laptop (en tablet se abre con el boton de menu),
@@ -18,6 +19,7 @@ export function Layout() {
   const [lateralMovil, setLateralMovil] = useState(false)
   const [ayuda, setAyuda] = useState(false)
   const { pathname } = useLocation()
+  const { tema, tamanoTexto, cambiarTema, cambiarTamanoTexto } = usePreferenciasVisuales()
 
   const alternarMenu = () => {
     if (window.matchMedia('(min-width: 1024px)').matches) {
@@ -61,7 +63,14 @@ export function Layout() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <IndicadorConexion />
-            <CampanaAlertas />
+           <CampanaAlertas />
+            <label className="sr-only" htmlFor="tamano-texto">Tamaño de texto</label>
+            <select id="tamano-texto" aria-label="Tamaño de texto" className="h-10 rounded-lg border border-borde bg-white px-2 text-sm text-tinta" value={tamanoTexto} onChange={(e) => cambiarTamanoTexto(e.target.value as typeof tamanoTexto)}>
+              <option value="normal">Texto normal</option><option value="grande">Texto grande</option><option value="extra-grande">Texto extra grande</option>
+            </select>
+            <button type="button" className="rounded-lg p-2 text-tinta hover:bg-beige" aria-label={tema === 'claro' ? 'Activar modo oscuro' : 'Activar modo claro'} onClick={() => cambiarTema(tema === 'claro' ? 'oscuro' : 'claro')}>
+              {tema === 'claro' ? <Moon className="size-5" /> : <Sun className="size-5" />}
+            </button>
           </div>
         </header>
         <main key={pathname} className="flex-1 px-4 py-6 lg:px-8 lg:py-8">

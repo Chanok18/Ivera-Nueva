@@ -15,7 +15,7 @@ const base = { id: 42, codigo: 'COT-0001', ubicacionId: 1, ubicacionNombre: 'Tie
 
 function Ubicacion() { return <p data-testid="ubicacion">{useLocation().pathname}{useLocation().search}</p> }
 function mostrar() {
-  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter initialEntries={['/cotizaciones/42']}><Routes><Route path="/cotizaciones/:id" element={<DetalleCotizacion />} /><Route path="/ventas" element={<Ubicacion />} /></Routes></MemoryRouter></QueryClientProvider>)
+  render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}><MemoryRouter initialEntries={['/cotizaciones/42']}><Routes><Route path="/cotizaciones/:id" element={<DetalleCotizacion />} /><Route path="/ventas" element={<Ubicacion />} /><Route path="/ventas/:id" element={<Ubicacion />} /></Routes></MemoryRouter></QueryClientProvider>)
 }
 
 describe('DetalleCotizacion: pasar al POS', () => {
@@ -48,5 +48,15 @@ describe('DetalleCotizacion: pasar al POS', () => {
     mostrar()
     await screen.findByText('COT-0001')
     expect(screen.queryByRole('button', { name: 'Pasar al POS' })).toBeNull()
+  })
+
+  it('muestra la venta asociada y navega a su detalle sin ofrecer una nueva conversion', async () => {
+    vi.mocked(cotizacionesApi.obtener).mockResolvedValue({ ...base, estado: 'EMITIDA', venta: { id: 91, numeroDocumento: 'NV01-000091', fecha: '2026-01-02T10:00:00Z', total: 350 } })
+    mostrar()
+    expect(await screen.findByText('Convertida en venta')).toBeInTheDocument()
+    expect(screen.getByText(/NV01-000091/)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Pasar al POS' })).toBeNull()
+    await userEvent.click(screen.getByRole('button', { name: 'Ver venta' }))
+    expect(screen.getByTestId('ubicacion')).toHaveTextContent('/ventas/91')
   })
 })

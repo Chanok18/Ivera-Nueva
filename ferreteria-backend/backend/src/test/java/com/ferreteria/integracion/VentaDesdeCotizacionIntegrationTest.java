@@ -61,6 +61,15 @@ class VentaDesdeCotizacionIntegrationTest {
                         List.of(new PagoRequest("EFECTIVO", new BigDecimal("350.00"), null)))));
 
         assertThat(venta.total()).isEqualByComparingTo("350.00");
+        var cotizacion = como(f.admin, () -> cotizacionService.obtener(cotizacionId));
+        var ventaConsultada = como(f.admin, () -> ventaService.obtener(venta.id()));
+        assertThat(cotizacion.venta()).isNotNull();
+        assertThat(cotizacion.venta().id()).isEqualTo(venta.id());
+        assertThat(cotizacion.venta().numeroDocumento()).isEqualTo(venta.numeroDocumento());
+        assertThat(cotizacion.venta().fecha()).isEqualTo(venta.fecha());
+        assertThat(cotizacion.venta().total()).isEqualByComparingTo(venta.total());
+        assertThat(ventaConsultada.cotizacionId()).isEqualTo(cotizacionId);
+        assertThat(ventaConsultada.cotizacionCodigo()).isEqualTo(cotizacion.codigo());
         assertThat(ventaRepository.countByCotizacionId(cotizacionId)).isEqualTo(1);
         assertThat(venta.detalles()).singleElement().satisfies(d -> {
             assertThat(d.cantidad()).isEqualByComparingTo("0.500");
@@ -83,6 +92,7 @@ class VentaDesdeCotizacionIntegrationTest {
     void stockInsuficienteNoCreaVentaNiKardex() throws Exception {
         Fixture f = fixture("sin-stock", new BigDecimal("499"));
         Long cotizacionId = como(f.admin, () -> cotizacionEmitida(f));
+        assertThat(como(f.admin, () -> cotizacionService.obtener(cotizacionId)).venta()).isNull();
         BigDecimal antes = stock(f);
         long movimientosAntes = movimientosVenta(null);
 

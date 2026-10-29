@@ -22,7 +22,7 @@ public record VentaResponse(Long id, TipoDocumentoVenta tipoDocumento, String nu
                             String vendedor, Long cajaId, Long clienteId, String clienteNombre,
                             CondicionVenta condicion, LocalDate fechaVencimiento, BigDecimal subtotal,
                             BigDecimal igv, BigDecimal descuento, BigDecimal total, BigDecimal saldoPendiente,
-                            EstadoVenta estado, String motivoAnulacion, BigDecimal vuelto,
+                             EstadoVenta estado, String motivoAnulacion, Long cotizacionId, String cotizacionCodigo, BigDecimal vuelto,
                             List<Detalle> detalles, List<PagoResponse> pagos) {
 
     public record Detalle(Long productoId, Long presentacionId, String descripcion, BigDecimal cantidad,
@@ -56,6 +56,6 @@ public record VentaResponse(Long id, TipoDocumentoVenta tipoDocumento, String nu
                 v.getCliente() == null ? null : v.getCliente().getId(),
                 v.getCliente() == null ? null : v.getCliente().getNombre(),
                 v.getCondicion(), v.getFechaVencimiento(), v.getSubtotal(), v.getIgv(), v.getDescuento(),
-                v.getTotal(), v.getSaldoPendiente(), v.getEstado(), v.getMotivoAnulacion(), vuelto, detalles, pagos);
+                 v.getTotal(), v.getSaldoPendiente(), v.getEstado(), v.getMotivoAnulacion(), v.getCotizacion() == null ? null : v.getCotizacion().getId(), v.getCotizacion() == null ? null : v.getCotizacion().getCodigo(), vuelto, detalles, pagos);
     }
 }

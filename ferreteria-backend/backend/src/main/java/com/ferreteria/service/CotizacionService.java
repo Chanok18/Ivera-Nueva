@@ -20,7 +20,7 @@ import java.util.*;
 public class CotizacionService {
  private static final BigDecimal CIEN = new BigDecimal("100");
  private final CotizacionRepository cotizacionRepository; private final ClienteRepository clienteRepository;
- private final PresentacionRepository presentacionRepository; private final Buscador buscador; private final AccesoUbicacionService acceso;
+  private final PresentacionRepository presentacionRepository; private final VentaRepository ventaRepository; private final Buscador buscador; private final AccesoUbicacionService acceso;
  @Transactional public CotizacionResponse crear(CotizacionRequest r) {
    Cotizacion c = nueva(r); return CotizacionResponse.completa(cotizacionRepository.save(c));
  }
@@ -30,7 +30,7 @@ public class CotizacionService {
  }
  @Transactional public CotizacionResponse emitir(Long id) { Cotizacion c=bloquear(id); validarBorrador(c); c.setEstado(EstadoCotizacion.EMITIDA); return CotizacionResponse.completa(c); }
  @Transactional public CotizacionResponse anular(Long id) { Cotizacion c=bloquear(id); if(c.getEstado()==EstadoCotizacion.ANULADA) throw new ReglaNegocioException("La cotizacion ya esta anulada"); c.setEstado(EstadoCotizacion.ANULADA); return CotizacionResponse.completa(c); }
- @Transactional(readOnly=true) public CotizacionResponse obtener(Long id) { Cotizacion c=cotizacionRepository.findById(id).orElseThrow(()->new RecursoNoEncontradoException("Cotizacion",id)); acceso.validarAcceso(c.getUbicacion().getId()); return CotizacionResponse.completa(c); }
+  @Transactional(readOnly=true) public CotizacionResponse obtener(Long id) { Cotizacion c=cotizacionRepository.findById(id).orElseThrow(()->new RecursoNoEncontradoException("Cotizacion",id)); acceso.validarAcceso(c.getUbicacion().getId()); return CotizacionResponse.completa(c, ventaRepository.findByCotizacionId(id).orElse(null)); }
  @Transactional(readOnly=true) public PaginaResponse<CotizacionResponse> listar(Long ubicacionId, EstadoCotizacion estado, Pageable p) {
    Specification<Cotizacion> f=Specification.allOf(Especificaciones.igual("ubicacion.id",acceso.ubicacionParaConsultar(ubicacionId)),Especificaciones.igual("estado",estado));
    return PaginaResponse.de(cotizacionRepository.findAll(f, Ordenamiento.validar(p,"id","fecha","codigo","total")),CotizacionResponse::resumen);
